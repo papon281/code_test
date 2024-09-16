@@ -16,11 +16,14 @@ class Task:
 
 
 class TaskManager:
-
     def __init__(self, storage):
         self.storage = storage
 
     def add_task(self, title, description):
+        if title in self.storage.tasks:
+            print("Task with title already exists. Please use a different title.")
+            return  # Stop further execution if the task exists
+
         task = Task(title, description)
         self.storage.save_task(task)
         return task
@@ -28,33 +31,31 @@ class TaskManager:
     def complete_task(self, title):
         task = self.storage.get_task(title)
         if task:
-            task.complete()
+            task.complete()  # Assuming complete() method updates the completed_at field
             self.storage.update_task(task)
             return True
         return False
 
     def list_tasks(self, include_completed=False):
-        tasks = self.storage.get_all_tasks()
-        if not include_completed:
-            tasks = [task for task in tasks if not task.completed]
-        return tasks
+        if include_completed:
+            return list(self.storage.get_all_tasks().values())
+        else:
+            return [task for task in self.storage.get_all_tasks().values() if not task.completed]
 
     def generate_report(self):
         tasks = self.storage.get_all_tasks()
         total_tasks = len(tasks)
-        completed_tasks = [task for task in tasks if task.completed]
+        completed_tasks = [task for task in tasks.values() if task.completed]
         completed_count = len(completed_tasks)
         pending_count = total_tasks - completed_count
 
-        # Calculate average time to complete a task
         total_time = 0
         for task in completed_tasks:
             created_time = datetime.fromisoformat(task.created_at)
-            if task.completed_at:
-                completed_time = datetime.fromisoformat(task.completed_at)
-                total_time += (completed_time - created_time).total_seconds()
+            completed_time = datetime.fromisoformat(task.completed_at) if task.completed_at else datetime.now()
+            total_time += (completed_time - created_time).total_seconds()
 
-        average_time = total_time / completed_count if completed_count > 0 else 0  # Average in seconds
+        average_time = total_time / completed_count if completed_count > 0 else 0
 
         report = {
             "total": total_tasks,

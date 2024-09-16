@@ -34,7 +34,8 @@ def main():
 
     if args.command == "add":
         task = manager.add_task(args.title, args.description)
-        print(f"Task '{task.title}' added successfully.")
+        if task:  # Check if task is not None
+            print(f"Task '{task.title}' added successfully.")
     elif args.command == "complete":
         if manager.complete_task(args.title):
             print(f"Task '{args.title}' marked as completed.")
